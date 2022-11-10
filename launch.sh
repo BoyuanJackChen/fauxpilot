@@ -8,4 +8,4 @@ fi
 source .env
 
 # On newer versions, docker-compose is docker compose
-docker compose up -d --remove-orphans || docker-compose up -d --remove-orphans
+docker compose up --remove-orphans || docker-compose up --remove-orphans

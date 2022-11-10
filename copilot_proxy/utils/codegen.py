@@ -131,6 +131,11 @@ class CodeGenProxy:
         bad_words_list = np.concatenate([np.zeros([input_start_ids.shape[0], 1, 1]).astype(
             np.int32), (-1 * np.ones([input_start_ids.shape[0], 1, 1])).astype(np.int32)], axis=1)
 
+        # Get beam parameters from input
+        beam_width[0][0] = data['beam_width']
+        beam_search_diversity_rate[0][0] = data['beam_search_diversity_rate']
+        print(f"\n\nbeam width is {beam_width[0][0]}")
+        print(f"beam search diversity rate is {beam_search_diversity_rate[0][0]}\n\n")
         inputs = [
             self.prepare_tensor("input_ids", input_start_ids),
             self.prepare_tensor("input_lengths", input_len),
@@ -156,14 +161,32 @@ class CodeGenProxy:
         if output_data is None:
             raise RuntimeError("No output data")
 
-        # All of these squeeze(1)s are to remove the beam width dimension.
-        output_data = output_data.squeeze(1)
+
+        # Calculate the beam index with the highest log prob in constant time.
+        lp_data = result.as_numpy("output_log_probs")
+        lp_sums = np.zeros((lp_data.shape[0], lp_data.shape[1]))
+        lp_result = np.zeros((lp_data.shape[0], lp_data.shape[2]))  # Pick the best one from each beam
+        data_result = np.zeros((output_data.shape[0], output_data.shape[2]), dtype=int)
+        # sequence_lengths has shape [n, beam_width]
+        sequence_lengths = result.as_numpy("sequence_length")
+        for i in range(lp_data.shape[0]):
+            for j in range(lp_data.shape[1]):
+                data = lp_data[i, j, :]
+                lp_sums[i, j] = np.sum(data) / np.count_nonzero(data)
+            best_beam = np.argmax(lp_sums[i, :])
+            lp_result[i, :] = lp_data[i, best_beam, :]
+            data_result[i, :] = output_data[:, best_beam, :]
+            sequence_lengths = sequence_lengths[:, best_beam]
+        output_data = data_result
+        # output_data = output_data.squeeze(1)
+
         if want_logprobs:
-            lp_data = result.as_numpy("output_log_probs").squeeze(1)
+            lp_data = lp_result
             # clp_data = result.as_numpy("cum_log_probs").squeeze(1)
         else:
             lp_data = [None] * output_data.shape[0]
-        sequence_lengths = result.as_numpy("sequence_length").squeeze(1)
+
+        # input_len is the same across beams so this squeeze is fine.
         gen_len = sequence_lengths - input_len.squeeze(1)
 
         decoded = self.tokenizer.decode_batch([out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])

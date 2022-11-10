@@ -20,4 +20,5 @@ class OpenAIinput(BaseModel):
     best_of: Optional[int] = 1
     logit_bias: Optional[dict]
     user: Optional[str]
-
+    beam_width: Optional[int] = 1
+    beam_search_diversity_rate: Optional[float] = 0.0
