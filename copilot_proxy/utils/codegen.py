@@ -169,14 +169,19 @@ class CodeGenProxy:
         data_result = np.zeros((output_data.shape[0], output_data.shape[2]), dtype=int)
         # sequence_lengths has shape [n, beam_width]
         sequence_lengths = result.as_numpy("sequence_length")
-        for i in range(lp_data.shape[0]):
-            for j in range(lp_data.shape[1]):
-                data = lp_data[i, j, :]
-                lp_sums[i, j] = np.sum(data) / np.count_nonzero(data)
-            best_beam = np.argmax(lp_sums[i, :])
-            lp_result[i, :] = lp_data[i, best_beam, :]
-            data_result[i, :] = output_data[:, best_beam, :]
-            sequence_lengths = sequence_lengths[:, best_beam]
+        # for i in range(lp_data.shape[0]):
+        #     for j in range(lp_data.shape[1]):
+        #         data = lp_data[i, j, :]
+        #         lp_sums[i, j] = np.sum(data) / np.count_nonzero(data)
+        #     best_beam = np.argmax(lp_sums[i, :])
+        #     lp_result[i, :] = lp_data[i, best_beam, :]
+        #     data_result[i, :] = output_data[i, best_beam, :]
+        #     sequence_lengths = sequence_lengths[:, best_beam]
+
+        # Assume the best beam is 0. (Randomly choose a beam)
+        lp_result[:, :] = lp_data[:, 0, :]
+        data_result[:, :] = output_data[:, 0, :]
+        sequence_lengths = sequence_lengths[:, 0]
         output_data = data_result
         # output_data = output_data.squeeze(1)
 
