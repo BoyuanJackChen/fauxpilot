@@ -134,8 +134,8 @@ class CodeGenProxy:
         # Get beam parameters from input
         beam_width[0][0] = data['beam_width']
         beam_search_diversity_rate[0][0] = data['beam_search_diversity_rate']
-        print(f"\n\nbeam width is {beam_width[0][0]}")
-        print(f"beam search diversity rate is {beam_search_diversity_rate[0][0]}\n\n")
+        # print(f"\n\nbeam width is {beam_width[0][0]}")
+        # print(f"beam search diversity rate is {beam_search_diversity_rate[0][0]}\n\n")
         inputs = [
             self.prepare_tensor("input_ids", input_start_ids),
             self.prepare_tensor("input_lengths", input_len),
@@ -179,7 +179,7 @@ class CodeGenProxy:
         #     sequence_lengths = sequence_lengths[:, best_beam]
 
         # Assume the best beam is 0. (Randomly choose a beam)
-        print("\n\n\nChoosing random beam\n\n\n")
+        # print("\n\n\nChoosing random beam\n\n\n")
         lp_result[:, :] = lp_data[:, 0, :]
         data_result[:, :] = output_data[:, 0, :]
         sequence_lengths = sequence_lengths[:, 0]
