@@ -179,6 +179,7 @@ class CodeGenProxy:
         #     sequence_lengths = sequence_lengths[:, best_beam]
 
         # Assume the best beam is 0. (Randomly choose a beam)
+        print("\n\n\nChoosing random beam\n\n\n")
         lp_result[:, :] = lp_data[:, 0, :]
         data_result[:, :] = output_data[:, 0, :]
         sequence_lengths = sequence_lengths[:, 0]
