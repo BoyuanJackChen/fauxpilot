@@ -187,10 +187,9 @@ class CodeGenProxy:
             data_result[:, :] = output_data[:, 0, :]
             sequence_lengths = sequence_lengths[:, 0]
             output_data = data_result
-        # output_data = output_data.squeeze(1)
+            # output_data = output_data.squeeze(1)
 
         if want_logprobs:
-            print("want_logprobs")
             lp_data = lp_result
             # clp_data = result.as_numpy("cum_log_probs").squeeze(1)
         else:
@@ -202,13 +201,22 @@ class CodeGenProxy:
         print(f"gen_len.shape is: {gen_len.shape}")
         print(f"lp_data.shape is: {lp_data.shape}")
         if one_beam:
+            # output_data.shape is: (1, max_len+9)
+            # gen_len.shape is: (1,)
+            # lp_data.shape is: (1, max_len)
             decoded = self.tokenizer.decode_batch(
                 [out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])
             trimmed = [self.trim_with_stopwords(d, stop_words) for d in decoded]
         else:
-            decoded = self.tokenizer.decode_batch(
-                [out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])
-            trimmed = [self.trim_with_stopwords(d, stop_words) for d in decoded]
+            # output_data.shape is: (1, beam_width, max_len+9)
+            # gen_len.shape is: (1, beam_width)
+            # lp_data.shape is: (1, beam_width, max_len)
+            decoded = []; trimmed = []
+            bw = output_data.shape[1]
+            for i in range(bw):
+                decoded.append(self.tokenizer.decode_batch(
+                    [out[prompt_len:prompt_len + g] for g, out in zip(gen_len[:,i], output_data[:,i,:])]))
+                trimmed.append([self.trim_with_stopwords(d, stop_words) for d in decoded[i]])
         print(f"decoded type is: {type(decoded)}; shape is: {len(decoded)}, {len(decoded[0])}")
         print(f"trimmed is: {trimmed}")
 
