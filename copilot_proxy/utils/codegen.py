@@ -198,7 +198,7 @@ class CodeGenProxy:
         decoded = self.tokenizer.decode_batch([out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])
         trimmed = [self.trim_with_stopwords(d, stop_words) for d in decoded]
         print(f"output_data.shape is: {output_data.shape}")
-        print(f"decoded type is: {type(decoded)}; shape is: {decoded.shape}")
+        print(f"decoded type is: {type(decoded)}; shape is: {len(decoded)}, {len(decoded[0])}")
         print(f"trimmed is: {trimmed}")
 
         choices = []
