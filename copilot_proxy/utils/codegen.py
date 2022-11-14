@@ -186,8 +186,8 @@ class CodeGenProxy:
             lp_result[:, :] = lp_data[:, 0, :]
             lp_data = lp_result
             data_result[:, :] = output_data[:, 0, :]
-            sequence_lengths = sequence_lengths[:, 0]
             output_data = data_result
+            sequence_lengths = sequence_lengths[:, 0]
             # output_data = output_data.squeeze(1)
 
         if want_logprobs:
@@ -218,11 +218,12 @@ class CodeGenProxy:
                 decoded.append(self.tokenizer.decode_batch(
                     [out[prompt_len:prompt_len + g] for g, out in zip(gen_len[:,i], output_data[:,i,:])]))
                 trimmed.append([self.trim_with_stopwords(d, stop_words) for d in decoded[i]])
-        print(f"decoded type is: {type(decoded)}; shape is: {len(decoded)}, {len(decoded[0])}")
-        print(f"trimmed is: {trimmed}")
+        print(f"decoded type is: {type(decoded)}; shape is: {len(decoded)}, 0-th value is {decoded[0]}")
+        print(f"trimmed has shape: {len(trimmed)}; is: {trimmed}")
 
         choices = []
         for i, (text, tokens, lps, g) in enumerate(zip(trimmed, output_data, lp_data, gen_len)):
+            print(f"tokens shape is {tokens.shape}")
             reason = "length" if max_tokens == g else "stop"
             if lps is not None:
                 tokens_str = [self.tokenizer.decode([t]) for t in tokens[prompt_len:prompt_len + g]]
