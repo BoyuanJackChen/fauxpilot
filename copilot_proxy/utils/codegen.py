@@ -163,7 +163,7 @@ class CodeGenProxy:
 
 
         # Calculate the beam index with the highest log prob in constant time.
-        one_beam = False
+        one_beam = True
         print(f"one_beam is: {one_beam}")
         lp_data = result.as_numpy("output_log_probs")
         lp_sums = np.zeros((lp_data.shape[0], lp_data.shape[1]))
@@ -224,6 +224,7 @@ class CodeGenProxy:
         choices = []
         for i, (text, tokens, lps, g) in enumerate(zip(trimmed, output_data, lp_data, gen_len)):
             print(f"tokens shape is {tokens.shape}")
+            print(f"lps shape is {lps.shape}")
             reason = "length" if max_tokens == g else "stop"
             if lps is not None:
                 tokens_str = [self.tokenizer.decode([t]) for t in tokens[prompt_len:prompt_len + g]]
