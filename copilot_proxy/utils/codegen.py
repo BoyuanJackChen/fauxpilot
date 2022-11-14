@@ -185,7 +185,7 @@ class CodeGenProxy:
         if one_beam:
             lp_result[:, :] = lp_data[:, 0, :]
             data_result[:, :] = output_data[:, 0, :]
-            sequence_lengths = sequence_lengths[:, 0]
+            # sequence_lengths = sequence_lengths[:, 0]
             output_data = data_result
         # output_data = output_data.squeeze(1)
 
