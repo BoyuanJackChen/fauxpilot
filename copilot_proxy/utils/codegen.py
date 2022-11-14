@@ -180,14 +180,15 @@ class CodeGenProxy:
 
         # Assume the best beam is 0. (Randomly choose a beam)
         # print("\n\n\nChoosing random beam\n\n\n")
-        lp_result[:, :] = lp_data[:, 0, :]
-        data_result[:, :] = output_data[:, 0, :]
-        sequence_lengths = sequence_lengths[:, 0]
-        output_data = data_result
+        # lp_result[:, :] = lp_data[:, 0, :]
+        # data_result[:, :] = output_data[:, 0, :]
+        # sequence_lengths = sequence_lengths[:, 0]
+        # output_data = data_result
         # output_data = output_data.squeeze(1)
 
         if want_logprobs:
-            lp_data = lp_result
+            lp_data = result.as_numpy("output_log_probs")
+            # lp_data = lp_result
             # clp_data = result.as_numpy("cum_log_probs").squeeze(1)
         else:
             lp_data = [None] * output_data.shape[0]
