@@ -200,6 +200,7 @@ class CodeGenProxy:
         gen_len = sequence_lengths - input_len.squeeze(1)
         print(f"output_data.shape is: {output_data.shape}")
         print(f"gen_len.shape is: {gen_len.shape}")
+        print(f"lp_data.shape is: {lp_data.shape}")
         if one_beam:
             decoded = self.tokenizer.decode_batch(
                 [out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])
