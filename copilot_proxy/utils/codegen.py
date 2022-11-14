@@ -163,7 +163,7 @@ class CodeGenProxy:
 
 
         # Calculate the beam index with the highest log prob in constant time.
-        one_beam = False
+        one_beam = True
         print(f"one_beam is: {one_beam}")
         lp_data = result.as_numpy("output_log_probs")
         lp_sums = np.zeros((lp_data.shape[0], lp_data.shape[1]))
