@@ -163,6 +163,8 @@ class CodeGenProxy:
 
 
         # Calculate the beam index with the highest log prob in constant time.
+        one_beam = False
+        print(f"one_beam is: {one_beam}")
         lp_data = result.as_numpy("output_log_probs")
         lp_sums = np.zeros((lp_data.shape[0], lp_data.shape[1]))
         lp_result = np.zeros((lp_data.shape[0], lp_data.shape[2]))  # Pick the best one from each beam
@@ -180,10 +182,11 @@ class CodeGenProxy:
 
         # Assume the best beam is 0. (Randomly choose a beam)
         # print("\n\n\nChoosing random beam\n\n\n")
-        # lp_result[:, :] = lp_data[:, 0, :]
-        # data_result[:, :] = output_data[:, 0, :]
-        # sequence_lengths = sequence_lengths[:, 0]
-        # output_data = data_result
+        if one_beam:
+            lp_result[:, :] = lp_data[:, 0, :]
+            data_result[:, :] = output_data[:, 0, :]
+            sequence_lengths = sequence_lengths[:, 0]
+            output_data = data_result
         # output_data = output_data.squeeze(1)
 
         if want_logprobs:
@@ -195,10 +198,16 @@ class CodeGenProxy:
 
         # input_len is the same across beams so this squeeze is fine.
         gen_len = sequence_lengths - input_len.squeeze(1)
-
-        decoded = self.tokenizer.decode_batch([out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])
-        trimmed = [self.trim_with_stopwords(d, stop_words) for d in decoded]
+        if one_beam:
+            decoded = self.tokenizer.decode_batch(
+                [out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])
+            trimmed = [self.trim_with_stopwords(d, stop_words) for d in decoded]
+        else:
+            decoded = self.tokenizer.decode_batch(
+                [out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])
+            trimmed = [self.trim_with_stopwords(d, stop_words) for d in decoded]
         print(f"output_data.shape is: {output_data.shape}")
+        print(f"gen_len.shape is: {gen_len.shape}")
         print(f"decoded type is: {type(decoded)}; shape is: {len(decoded)}, {len(decoded[0])}")
         print(f"trimmed is: {trimmed}")
 
