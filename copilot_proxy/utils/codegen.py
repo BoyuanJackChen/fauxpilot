@@ -284,29 +284,38 @@ class CodeGenProxy:
     def random_completion_id():
         return 'cmpl-' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(29))
 
-    def streamed_response(self, completion, choices):
-        for c in choices:
+    def streamed_response(self, completion, choices, lp_data=None):
+        # for c in choices:
+        #     completion['id'] = self.random_completion_id()
+        #     completion['choices'] = [c]
+        #     yield f'data: {json.dumps(completion)}\n\n'
+        for i in range(len(choices)):
             completion['id'] = self.random_completion_id()
+            c = choices[i]
             completion['choices'] = [c]
-            yield f'data: {json.dumps(completion)}\n\n'
+            if lp_data is not None:
+                lp = lp_data[i]
+                completion['lp_data'] = lp
         yield 'data: [DONE]\n\n'
 
-    def non_streamed_response(self, completion, choices) -> str:
+    def non_streamed_response(self, completion, choices, lp_data=None) -> str:
         completion['id'] = self.random_completion_id()
         completion['choices'] = choices
+        completion['lp_data'] = lp_data
         return json.dumps(completion)
 
     def __call__(self, data: dict):
         st = time.time()
         try:
-            completion, choices = self.generate(data)
+            completion, choices, lp_data = self.generate(data)
         except InferenceServerException as E:
             print(E)
             completion = {}
             choices = []
         ed = time.time()
         print(f"Returned completion in {(ed - st) * 1000} ms")
+        print(f"Stream is {data.get('stream', False)}")
         if data.get('stream', False):
-            return self.streamed_response(completion, choices)
+            return self.streamed_response(completion, choices, lp_data)
         else:
-            return self.non_streamed_response(completion, choices)
+            return self.non_streamed_response(completion, choices, lp_data)
