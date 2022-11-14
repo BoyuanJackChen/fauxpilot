@@ -191,7 +191,7 @@ class CodeGenProxy:
 
         if want_logprobs:
             print("want_logprobs")
-            # lp_data = lp_result
+            lp_data = lp_result
             # clp_data = result.as_numpy("cum_log_probs").squeeze(1)
         else:
             lp_data = [None] * output_data.shape[0]
