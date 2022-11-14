@@ -169,8 +169,8 @@ class CodeGenProxy:
         data_result = np.zeros((output_data.shape[0], output_data.shape[2]), dtype=int)
         # sequence_lengths has shape [n, beam_width]
         sequence_lengths = result.as_numpy("sequence_length")
-        # for i in range(lp_data.shape[0]):
-        #     for j in range(lp_data.shape[1]):
+        # for i in range(lp_data.shape[0]):  # iterate over batch
+        #     for j in range(lp_data.shape[1]):  # iterate over beam
         #         data = lp_data[i, j, :]
         #         lp_sums[i, j] = np.sum(data) / np.count_nonzero(data)
         #     best_beam = np.argmax(lp_sums[i, :])
@@ -197,6 +197,9 @@ class CodeGenProxy:
 
         decoded = self.tokenizer.decode_batch([out[prompt_len:prompt_len + g] for g, out in zip(gen_len, output_data)])
         trimmed = [self.trim_with_stopwords(d, stop_words) for d in decoded]
+        print(f"output_data.shape is: {output_data.shape}")
+        print(f"decoded type is: {type(decoded)}; shape is: {decoded.shape}")
+        print(f"trimmed is: {trimmed}")
 
         choices = []
         for i, (text, tokens, lps, g) in enumerate(zip(trimmed, output_data, lp_data, gen_len)):
