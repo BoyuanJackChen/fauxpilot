@@ -278,7 +278,7 @@ class CodeGenProxy:
                 'total_tokens': int(gen_len.sum() + prompt_len),
             }
         }
-        return completion, choices
+        return completion, choices, lp_data
 
     @staticmethod
     def random_completion_id():
