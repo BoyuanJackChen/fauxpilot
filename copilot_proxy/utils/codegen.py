@@ -198,9 +198,9 @@ class CodeGenProxy:
 
         # input_len is the same across beams so this squeeze is fine.
         gen_len = sequence_lengths - input_len.squeeze(1)
-        print(f"output_data.shape is: {output_data.shape}")
-        print(f"gen_len.shape is: {gen_len.shape}")
-        print(f"lp_data.shape is: {lp_data.shape}")
+        # print(f"output_data.shape is: {output_data.shape}")
+        # print(f"gen_len.shape is: {gen_len.shape}")
+        # print(f"lp_data.shape is: {lp_data.shape}")
         if one_beam:
             # output_data.shape is: (1, max_len+9)
             # gen_len.shape is: (1,)
@@ -218,8 +218,6 @@ class CodeGenProxy:
                 decoded.append(self.tokenizer.decode_batch(
                     [out[prompt_len:prompt_len + g] for g, out in zip(gen_len[:,i], output_data[:,i,:])]))
                 trimmed.append([self.trim_with_stopwords(d, stop_words) for d in decoded[i]])
-        print(f"decoded type is: {type(decoded)}; shape is: {len(decoded)}, 0-th value is {decoded[0]}")
-        print(f"trimmed has shape: {len(trimmed)}; is: {trimmed}")
 
         if not one_beam:
             output_data = output_data.squeeze(0)
@@ -227,8 +225,6 @@ class CodeGenProxy:
             gen_len = gen_len.squeeze(0)
         choices = []
         for i, (text, tokens, lps, g) in enumerate(zip(trimmed, output_data, lp_data, gen_len)):
-            print(f"tokens shape is {tokens.shape}")
-            print(f"lps shape is {lps.shape}")
             reason = "length" if max_tokens == g else "stop"
             if lps is not None:
                 tokens_str = [self.tokenizer.decode([t]) for t in tokens[prompt_len:prompt_len + g]]
