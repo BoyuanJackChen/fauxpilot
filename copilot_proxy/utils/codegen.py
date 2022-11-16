@@ -244,13 +244,13 @@ class CodeGenProxy:
                         random_token_lp = top_token_lp - random.random()
                         fakedict[random_token_str] = random_token_lp
                     top_logprobs.append(fakedict)
-
                 lpdict = {
                     'token_logprobs': lps.tolist(),
                     'top_logprobs': top_logprobs,
                     'tokens': tokens_str,
                     'text_offset': offsets,
                 }
+
             else:
                 lpdict = None
 
