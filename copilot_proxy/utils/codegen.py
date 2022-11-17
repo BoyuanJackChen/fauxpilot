@@ -309,11 +309,14 @@ class CodeGenProxy:
             completion = {}
             choices = []
         ed = time.time()
+        print(f"Towards the end, lp_data is: {lp_data}")
         # time_taken = round(ed - st, 3)
         # Also return the time used for generation
         print(f"Returned completion in {(ed - st) * 1000} ms")
         print(f"Stream is {data.get('stream', False)}")
         if data.get('stream', False):
+            print(f"streamed response is {self.streamed_response(completion, choices, lp_data)}")
             return self.streamed_response(completion, choices, lp_data)
         else:
+            print(f"non streamed response is {self.non_streamed_response(completion, choices, lp_data)}")
             return self.non_streamed_response(completion, choices, lp_data)
