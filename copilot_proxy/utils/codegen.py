@@ -309,6 +309,8 @@ class CodeGenProxy:
             completion = {}
             choices = []
         ed = time.time()
+        # time_taken = round(ed - st, 3)
+        # Also return the time used for generation
         print(f"Returned completion in {(ed - st) * 1000} ms")
         print(f"Stream is {data.get('stream', False)}")
         if data.get('stream', False):
