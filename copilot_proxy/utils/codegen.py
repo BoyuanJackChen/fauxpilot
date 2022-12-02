@@ -134,8 +134,7 @@ class CodeGenProxy:
         # Get beam parameters from input
         beam_width[0][0] = data['beam_width']
         beam_search_diversity_rate[0][0] = data['beam_search_diversity_rate']
-        # print(f"\n\nbeam width is {beam_width[0][0]}")
-        # print(f"beam search diversity rate is {beam_search_diversity_rate[0][0]}\n\n")
+
         inputs = [
             self.prepare_tensor("input_ids", input_start_ids),
             self.prepare_tensor("input_lengths", input_len),
@@ -181,7 +180,6 @@ class CodeGenProxy:
         #     sequence_lengths = sequence_lengths[:, best_beam]
 
         # Assume the best beam is 0. (Randomly choose a beam)
-        # print("\n\n\nChoosing random beam\n\n\n")
         if one_beam:
             lp_result[:, :] = lp_data[:, 0, :]
             lp_data = lp_result
@@ -309,14 +307,14 @@ class CodeGenProxy:
             completion = {}
             choices = []
         ed = time.time()
-        print(f"Towards the end, lp_data is: {lp_data}")
+        # print(f"Towards the end, lp_data is: {lp_data}")
         # time_taken = round(ed - st, 3)
         # Also return the time used for generation
         print(f"Returned completion in {(ed - st) * 1000} ms")
-        print(f"Stream is {data.get('stream', False)}")
+        # print(f"Stream is {data.get('stream', False)}")
         if data.get('stream', False):
-            print(f"streamed response is {self.streamed_response(completion, choices, lp_data)}")
+            # print(f"streamed response is {self.streamed_response(completion, choices, lp_data)}")
             return self.streamed_response(completion, choices, lp_data)
         else:
-            print(f"non streamed response is {self.non_streamed_response(completion, choices, lp_data)}")
+            # print(f"non streamed response is {self.non_streamed_response(completion, choices, lp_data)}")
             return self.non_streamed_response(completion, choices, lp_data)
