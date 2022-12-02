@@ -134,6 +134,7 @@ class CodeGenProxy:
         # Get beam parameters from input
         beam_width[0][0] = data['beam_width']
         beam_search_diversity_rate[0][0] = data['beam_search_diversity_rate']
+        print(f"beam_width is: {beam_width[0][0]}, beam_search_diversity_rate is: {beam_search_diversity_rate[0][0]}")
 
         inputs = [
             self.prepare_tensor("input_ids", input_start_ids),
