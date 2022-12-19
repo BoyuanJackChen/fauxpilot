@@ -296,7 +296,10 @@ class CodeGenProxy:
     def non_streamed_response(self, completion, choices, lp_data=None) -> str:
         completion['id'] = self.random_completion_id()
         completion['choices'] = choices
-        completion['lp_data'] = lp_data.tolist()
+        if lp_data is not None:
+            completion['lp_data'] = lp_data.tolist()
+        else:
+            completion['lp_data'] = None
         return json.dumps(completion)
 
     def __call__(self, data: dict):
