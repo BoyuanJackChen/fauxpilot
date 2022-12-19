@@ -318,4 +318,4 @@ class CodeGenProxy:
             return self.streamed_response(completion, choices, lp_data)
         else:
             # print(f"non streamed response is {self.non_streamed_response(completion, choices, lp_data)}")
-            return self.non_streamed_response(completion, choices, lp_data)
+            return self.non_streamed_response(completion, choices, None)
