@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   triton:
-    image: triton_with_ft_boyuanchen:22.06
+    image: triton_with_ft_3296:22.06
     command: bash -c "CUDA_VISIBLE_DEVICES=${GPUS} mpirun -n 1 --allow-run-as-root /opt/tritonserver/bin/tritonserver --model-repository=/model"
     shm_size: '2gb'
     volumes:
