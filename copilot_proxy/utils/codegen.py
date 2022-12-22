@@ -155,16 +155,18 @@ class CodeGenProxy:
             self.prepare_tensor("stop_words_list", stop_word_list),
         ]
 
+        infer_start = time.time()
         result = self.client.infer(model_name, inputs)
+        time_spent = time.time() - infer_start
 
         output_data = result.as_numpy("output_ids")
         if output_data is None:
             raise RuntimeError("No output data")
 
 
-        # Calculate the beam index with the highest log prob in constant time.
+        # one_beam means the first beam, which is also the best beam.
         one_beam = False
-        # print(f"one_beam is: {one_beam}")
+        print(f"one_beam is: {one_beam}")
         lp_data = result.as_numpy("output_log_probs")
         lp_sums = np.zeros((lp_data.shape[0], lp_data.shape[1]))
         lp_result = np.zeros((lp_data.shape[0], lp_data.shape[2]))  # Pick the best one from each beam
@@ -197,9 +199,8 @@ class CodeGenProxy:
 
         # input_len is the same across beams so this squeeze is fine.
         gen_len = sequence_lengths - input_len.squeeze(1)
-        # print(f"output_data.shape is: {output_data.shape}")
-        # print(f"gen_len.shape is: {gen_len.shape}")
-        # print(f"lp_data.shape is: {lp_data.shape}")
+
+        # Decode the output
         if one_beam:
             # output_data.shape is: (1, max_len+9)
             # gen_len.shape is: (1,)
@@ -211,17 +212,18 @@ class CodeGenProxy:
             # output_data.shape is: (1, beam_width, max_len+9)
             # gen_len.shape is: (1, beam_width)
             # lp_data.shape is: (1, beam_width, max_len)
+            # After squeeze, they are off the first dimension
             decoded = []; trimmed = []
             bw = output_data.shape[1]
             for i in range(bw):
                 decoded.append(self.tokenizer.decode_batch(
                     [out[prompt_len:prompt_len + g] for g, out in zip(gen_len[:,i], output_data[:,i,:])]))
                 trimmed.append([self.trim_with_stopwords(d, stop_words) for d in decoded[i]])
-
-        if not one_beam:
             output_data = output_data.squeeze(0)
             lp_data = lp_data.squeeze(0)
             gen_len = gen_len.squeeze(0)
+        lp_average = np.sum(lp_data, axis=1) / gen_len
+
         choices = []
         for i, (text, tokens, lps, g) in enumerate(zip(trimmed, output_data, lp_data, gen_len)):
             reason = "length" if max_tokens == g else "stop"
@@ -257,6 +259,7 @@ class CodeGenProxy:
                 'text': text,
                 'index': i,
                 'finish_reason': reason,
+                'lp_average': float(lp_average[i]),
                 'logprobs': lpdict,
             }
             choices.append(choice)
@@ -273,39 +276,35 @@ class CodeGenProxy:
                 'total_tokens': int(gen_len.sum() + prompt_len),
             }
         }
-        return completion, choices, lp_data
+        return completion, choices, time_spent
 
     @staticmethod
     def random_completion_id():
         return 'cmpl-' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(29))
 
-    def streamed_response(self, completion, choices, lp_data=None):
-        # for c in choices:
-        #     completion['id'] = self.random_completion_id()
-        #     completion['choices'] = [c]
-        #     yield f'data: {json.dumps(completion)}\n\n'
-        for i in range(len(choices)):
+    def streamed_response(self, completion, choices, infer_time):
+        for c in choices:
             completion['id'] = self.random_completion_id()
-            c = choices[i]
             completion['choices'] = [c]
-            if lp_data is not None:
-                lp = lp_data[i]
-                completion['lp_data'] = lp.tolist()
+            completion['infer_time'] = infer_time
+            yield f'data: {json.dumps(completion)}\n\n'
+        # for i in range(len(choices)):
+        #     completion['id'] = self.random_completion_id()
+        #     c = choices[i]
+        #     completion['choices'] = [c]
         yield 'data: [DONE]\n\n'
 
-    def non_streamed_response(self, completion, choices, lp_data=None) -> str:
+    def non_streamed_response(self, completion, choices, infer_time) -> str:
         completion['id'] = self.random_completion_id()
         completion['choices'] = choices
-        if lp_data is not None:
-            completion['lp_data'] = lp_data.tolist()
-        else:
-            completion['lp_data'] = None
+        completion['infer_time'] = infer_time
         return json.dumps(completion)
 
     def __call__(self, data: dict):
+        infer_time = 0
         st = time.time()
         try:
-            completion, choices, lp_data = self.generate(data)
+            completion, choices, infer_time = self.generate(data)
         except InferenceServerException as E:
             print(E)
             completion = {}
@@ -314,11 +313,11 @@ class CodeGenProxy:
         # print(f"Towards the end, lp_data is: {lp_data}")
         # time_taken = round(ed - st, 3)
         # Also return the time used for generation
-        print(f"Returned completion in {(ed - st) * 1000} ms")
+        print(f"Returned completion in {(ed - st) * 1000} ms; inference time: {infer_time * 1000} ms")
         # print(f"Stream is {data.get('stream', False)}")
         if data.get('stream', False):
-            # print(f"streamed response is {self.streamed_response(completion, choices, lp_data)}")
-            return self.streamed_response(completion, choices, lp_data)
+            # print(f"streamed response is {self.streamed_response(completion, choices)}")
+            return self.streamed_response(completion, choices, infer_time)
         else:
-            # print(f"non streamed response is {self.non_streamed_response(completion, choices, lp_data)}")
-            return self.non_streamed_response(completion, choices, None)
+            # print(f"non streamed response is {self.non_streamed_response(completion, choices)}")
+            return self.non_streamed_response(completion, choices, infer_time)
